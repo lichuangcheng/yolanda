@@ -98,18 +98,14 @@ tcp_connection::tcp_connection(int connected_fd, struct event_loop *eventLoop,
 }
 
 //应用层调用入口
-int tcp_connection_send_data(struct tcp_connection *tcpConnection, void *data, int size) {
+int tcp_connection::send_data(void *data, size_t size) {
     ssize_t nwrited = 0;
     size_t nleft = size;
     int fault = 0;
 
-    struct channel *channel = tcpConnection->chan.get();
-    auto &output_buffer = tcpConnection->output_buffer;
-
     //先往套接字尝试发送数据
-    
-    if (!channel->write_event_is_enabled() && output_buffer.readable() == 0) {
-        nwrited = write(channel->fd, data, size);
+    if (!chan->write_event_is_enabled() && output_buffer.readable() == 0) {
+        nwrited = write(chan->fd, data, size);
         if (nwrited >= 0) {
             nleft = nleft - nwrited;
         } else {
@@ -125,8 +121,8 @@ int tcp_connection_send_data(struct tcp_connection *tcpConnection, void *data, i
     if (!fault && nleft > 0) {
         //拷贝到Buffer中，Buffer的数据由框架接管
         output_buffer.append(data + nwrited, nleft);
-        if (!channel->write_event_is_enabled()) {
-            channel->write_event_enable();
+        if (!chan->write_event_is_enabled()) {
+            chan->write_event_enable();
         }
     }
 
@@ -134,8 +130,8 @@ int tcp_connection_send_data(struct tcp_connection *tcpConnection, void *data, i
 }
 
 int tcp_connection::send_buffer(buffer *buffer) {
-    int size = buffer->readable();
-    int result = tcp_connection_send_data(this, (void *)(buffer->data.data() + buffer->readIndex), size);
+    auto size = buffer->readable();
+    int result = send_data((void *)(buffer->data.data() + buffer->readIndex), size);
     buffer->readIndex += size;
     return result;
 }

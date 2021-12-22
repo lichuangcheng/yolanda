@@ -43,6 +43,7 @@ void event_loop::channel_buffer_nolock(int fd, struct channel *channel1, int typ
 {
     YOLANDA_UNUSED(fd);
     //add channel into the pending list
+    // TODO: 释放内存
     struct channel_element *channelElement = (struct channel_element *)malloc(sizeof(struct channel_element));
     channelElement->channel = channel1;
     channelElement->type = type;

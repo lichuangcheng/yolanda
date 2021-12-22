@@ -36,18 +36,9 @@ struct tcp_connection {
                    connection_closed_call_back connectionClosedCallBack,
                    message_call_back messageCallBack, write_completed_call_back writeCompletedCallBack);
 
+    int send_data(void *data, size_t size);
     int send_buffer(buffer *buffer);
     void shutdown();
 };
 
-
-
-//应用层调用入口
-// int tcp_connection_send_data(struct tcp_connection *tcpConnection, void *data, int size);
-
-//应用层调用入口
-// int tcp_connection_send_buffer(struct tcp_connection *tcpConnection, struct buffer * buffer);
-
-// void tcp_connection_shutdown(struct tcp_connection * tcpConnection);
-//int tcp_connection_append_buffer(struct tcp_connection *tcpConnection);
 #endif

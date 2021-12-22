@@ -146,6 +146,7 @@ int handle_connection_established(void *data) {
     struct event_loop *eventLoop = tcpServer->threadPool->get_loop();
 
     // create a new tcp connection
+    // TODO: 释放内存（...）
     auto tcpConnection = new tcp_connection(connected_fd, eventLoop,
                                             tcpServer->connectionCompletedCallBack,
                                             tcpServer->connectionClosedCallBack,
