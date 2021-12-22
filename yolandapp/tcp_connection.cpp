@@ -99,7 +99,7 @@ tcp_connection::tcp_connection(int connected_fd, struct event_loop *eventLoop,
 
 //应用层调用入口
 int tcp_connection_send_data(struct tcp_connection *tcpConnection, void *data, int size) {
-    size_t nwrited = 0;
+    ssize_t nwrited = 0;
     size_t nleft = size;
     int fault = 0;
 
@@ -135,7 +135,7 @@ int tcp_connection_send_data(struct tcp_connection *tcpConnection, void *data, i
 
 int tcp_connection::send_buffer(buffer *buffer) {
     int size = buffer->readable();
-    int result = tcp_connection_send_data(this, (void *)buffer->data.data() + buffer->readIndex, size);
+    int result = tcp_connection_send_data(this, (void *)(buffer->data.data() + buffer->readIndex), size);
     buffer->readIndex += size;
     return result;
 }

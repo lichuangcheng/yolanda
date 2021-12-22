@@ -28,29 +28,6 @@ void error(int status, int err, const char *fmt, ...) {
         exit(status);
 }
 
-
-static void
-err_doit(int errnoflag, int level, const char *fmt, va_list ap) {
-    int errno_save, n;
-    char buf[MAXLINE + 1];
-
-    errno_save = errno;        /* value caller might want printed */
-
-    vsnprintf(buf, MAXLINE, fmt, ap);    /* safe */
-
-    n = strlen(buf);
-    if (errnoflag)
-        snprintf(buf + n, MAXLINE - n, ": %s", strerror(errno_save));
-    strcat(buf, "\n");
-
-
-    fflush(stdout);        /* in case stdout and stderr are the same */
-    fputs(buf, stderr);
-    fflush(stderr);
-
-    return;
-}
-
 void yolanda_log(int severity, const char *msg) {
     const char *severity_str;
     switch (severity) {

@@ -9,19 +9,19 @@
 //数据缓冲区
 struct buffer {
     std::string data;
-    int readIndex;       //缓冲读取位置
-    int writeIndex;      //缓冲写入位置
+    size_t readIndex;       //缓冲读取位置
+    size_t writeIndex;      //缓冲写入位置
 
     buffer(size_t size = 65536);
     ~buffer();
 
-    int writeable() const {
+    size_t writeable() const {
         return data.size() - writeIndex;
     }
-    int readable() const {
+    size_t readable() const {
         return writeIndex - readIndex;
     }
-    int spare() const {
+    size_t spare() const {
         return readIndex;
     }
 

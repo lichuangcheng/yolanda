@@ -10,7 +10,7 @@ void *event_loop_thread_run(void *arg) {
         std::unique_lock<std::mutex> lock(eventLoopThread->mutex);
         // 初始化化event loop，之后通知主线程
         eventLoopThread->eventLoop = std::make_unique<event_loop>(eventLoopThread->thread_name);
-        yolanda_msgx("event loop thread init and signal, %s", eventLoopThread->thread_name);
+        yolanda_msgx("event loop thread init and signal, %s", eventLoopThread->thread_name.c_str());
         eventLoopThread->cond.notify_one();
     }
 
@@ -42,6 +42,6 @@ struct event_loop *event_loop_thread::start()
         });
     }
     
-    yolanda_msgx("event loop thread started, %s", thread_name);
+    yolanda_msgx("event loop thread started, %s", thread_name.c_str());
     return eventLoop.get();
 }

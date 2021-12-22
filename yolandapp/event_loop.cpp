@@ -39,7 +39,9 @@ int event_loop::handle_pending_channel()
     return 0;
 }
 
-void event_loop::channel_buffer_nolock(int fd, struct channel *channel1, int type) {
+void event_loop::channel_buffer_nolock(int fd, struct channel *channel1, int type) 
+{
+    YOLANDA_UNUSED(fd);
     //add channel into the pending list
     struct channel_element *channelElement = (struct channel_element *)malloc(sizeof(struct channel_element));
     channelElement->channel = channel1;
@@ -181,7 +183,7 @@ int handleWakeup(void *data) {
     if (n != sizeof(one)) {
         YOLONDA_LOG_ERR("handleWakeup  failed");
     }
-    yolanda_msgx("wakeup, %s", eventLoop->thread_name);
+    yolanda_msgx("wakeup, %s", eventLoop->thread_name.c_str());
     return 0;
 }
 

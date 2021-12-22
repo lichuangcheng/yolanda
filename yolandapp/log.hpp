@@ -3,6 +3,8 @@
 
 #include "stdarg.h"
 
+#define YOLANDA_UNUSED(v) (void)v
+
 #define LOG_DEBUG_TYPE 0
 #define LOG_MSG_TYPE   1
 #define LOG_WARN_TYPE  2

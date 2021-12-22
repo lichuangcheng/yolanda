@@ -76,6 +76,7 @@ int event_dispatcher::update(struct channel *channel1)
 
 int event_dispatcher::dispatch(struct event_loop *eventLoop, struct timeval *timeval) 
 {
+    YOLANDA_UNUSED(timeval);
     int i, n;
     n = epoll_wait(efd, events.data(), events.size(), -1);
     yolanda_msgx("epoll_wait wakeup, %s", eventLoop->thread_name.c_str());
