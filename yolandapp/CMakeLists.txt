@@ -14,3 +14,4 @@ target_compile_options(yolandapp
 target_include_directories(yolandapp PUBLIC ..)
 
 add_subdirectory(chap-27)
+add_subdirectory(chap-34)
