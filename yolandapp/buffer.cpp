@@ -65,15 +65,15 @@ int buffer::socket_read(int fd)
 {
     char additional_buffer[INIT_BUFFER_SIZE];
     struct iovec vec[2];
-    int max_writable = writeable();
+    auto max_writable = writeable();
     vec[0].iov_base = this->data.data() + this->writeIndex;
     vec[0].iov_len = max_writable;
     vec[1].iov_base = additional_buffer;
     vec[1].iov_len = sizeof(additional_buffer);
-    int result = readv(fd, vec, 2);
+    auto result = readv(fd, vec, 2);
     if (result < 0) {
         return -1;
-    } else if (result <= max_writable) {
+    } else if (static_cast<size_t>(result) <= max_writable) {
         writeIndex += result;
     } else {
         writeIndex = data.size();
