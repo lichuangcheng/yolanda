@@ -39,7 +39,7 @@ void buffer::make_room(size_t size)
 
 void buffer::append(void *data, int size) 
 {
-    if (!data) {
+    if (data) {
         make_room(size);
         memcpy(this->data.data() + writeIndex, data, size);
         writeIndex += size;
