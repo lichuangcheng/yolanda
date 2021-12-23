@@ -5,6 +5,7 @@
 #include "yolandapp/channel.hpp"
 #include "yolandapp/event_dispatcher.hpp"
 #include <memory>
+#include <mutex>
 
 
 struct channel_element {
@@ -20,13 +21,13 @@ struct event_loop {
     /** 对应的event_dispatcher的数据. */
     void *event_dispatcher_data;
     channel_map channelMap;
+    std::unique_ptr<channel> wakeup_channel;
 
     int is_handle_pending;
-    struct channel_element *pending_head;
-    struct channel_element *pending_tail;
+    std::vector<channel_element> pending_list;
 
     pthread_t owner_thread_id;
-    pthread_mutex_t mutex;
+    std::mutex mutex;
     pthread_cond_t cond;
     int socketPair[2];
     std::string thread_name;

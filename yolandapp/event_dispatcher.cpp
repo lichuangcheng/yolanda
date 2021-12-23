@@ -112,9 +112,6 @@ void event_dispatcher::clear()
 
 int event_dispatcher::init() 
 {
-    event_count = 0;
-    nfds = 0;
-    realloc_copy = 0;
     efd = epoll_create1(0);
     if (efd == -1) {
         error_die("epoll create failed");

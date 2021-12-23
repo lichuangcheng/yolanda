@@ -33,7 +33,6 @@ struct http_request {
     ~http_request();
 
     void clear();
-
     void reset();
 
     void add_header(const char * key, const char * value);

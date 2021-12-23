@@ -11,67 +11,42 @@
 // in the i/o thread
 int event_loop::handle_pending_channel() 
 {
-    //get the lock
-    pthread_mutex_lock(&mutex);
+    // scope lock
+    std::lock_guard<std::mutex> lock(mutex);
     is_handle_pending = 1;
 
-    struct channel_element *channelElement = pending_head;
-    while (channelElement != NULL) {
-        //save into event_map
-        struct channel *channel = channelElement->channel;
-        int fd = channel->fd;
-        if (channelElement->type == 1) {
-            handle_pending_add(fd, channel);
-        } else if (channelElement->type == 2) {
-            handle_pending_remove(fd, channel);
-        } else if (channelElement->type == 3) {
-            handle_pending_update(fd, channel);
-        }
-        channelElement = channelElement->next;
+    for (auto &pending : pending_list)
+    {
+        auto chan = pending.channel;
+        int fd = chan->fd;
+        if (pending.type == 1)
+            handle_pending_add(fd, chan);
+        else if (pending.type == 2)
+            handle_pending_remove(fd, chan);
+        else if (pending.type == 3)
+            handle_pending_update(fd, chan);
     }
-
-    pending_head = pending_tail = NULL;
+    pending_list.clear();
     is_handle_pending = 0;
-
-    //release the lock
-    pthread_mutex_unlock(&mutex);
-
     return 0;
 }
 
-void event_loop::channel_buffer_nolock(int fd, struct channel *channel1, int type) 
+int event_loop::do_channel_event(int fd, struct channel *channel1, int type) 
 {
-    YOLANDA_UNUSED(fd);
-    //add channel into the pending list
-    // TODO: 释放内存
-    struct channel_element *channelElement = (struct channel_element *)malloc(sizeof(struct channel_element));
-    channelElement->channel = channel1;
-    channelElement->type = type;
-    channelElement->next = NULL;
-    //第一个元素
-    if (this->pending_head == NULL) {
-        this->pending_head = this->pending_tail = channelElement;
-    } else {
-        this->pending_tail->next = channelElement;
-        this->pending_tail = channelElement;
+    {
+        // scope lock
+        std::lock_guard<std::mutex> lock(mutex);
+        assert(is_handle_pending == 0);
+         // 将通道事件入队
+        pending_list.push_back(channel_element{type, channel1, nullptr});
     }
-}
 
-int event_loop::do_channel_event(int fd, struct channel *channel1, int type) {
-    //get the lock
-    pthread_mutex_lock(&mutex);
-    assert(is_handle_pending == 0);
-    channel_buffer_nolock(fd, channel1, type);
-    //release the lock
-    pthread_mutex_unlock(&mutex);
-    if (!isInSameThread(this)) {
+    if (!isInSameThread(this)) 
         wakeup();
-    } else {
+    else 
         handle_pending_channel();
-    }
 
     return 0;
-
 }
 
 int event_loop::add_channel_event(int fd, channel *channel1) {
@@ -153,9 +128,10 @@ int event_loop::channel_event_activate(int fd, int revents) {
     if (fd < 0)
         return 0;
 
-    if (!map.contains(fd)) return (-1);
+    auto it = map.find(fd);
+    if (it == map.end()) return -1;
 
-    channel *channel = map[fd];
+    channel *channel = it->second;
     assert(fd == channel->fd);
 
     if (revents & (EVENT_READ)) {
@@ -166,7 +142,6 @@ int event_loop::channel_event_activate(int fd, int revents) {
     }
 
     return 0;
-
 }
 
 void event_loop::wakeup() {
@@ -199,9 +174,6 @@ event_loop::~event_loop()
 
 event_loop::event_loop(const std::string &thread_name) 
 {
-    pthread_mutex_init(&mutex, NULL);
-    pthread_cond_init(&cond, NULL);
-
     this->thread_name = thread_name.empty() ? "main thread" : thread_name;
     quit = 0;
 
@@ -215,12 +187,10 @@ event_loop::event_loop(const std::string &thread_name)
         YOLONDA_LOG_ERR("socketpair set fialed");
     }
     is_handle_pending = 0;
-    pending_head = NULL;
-    pending_tail = NULL;
+    pending_list.reserve(64);
     
-    // TODO: 释放 channel 内存
-    auto chan = new channel(socketPair[1], EVENT_READ, handleWakeup, NULL, this);
-    this->add_channel_event(chan->fd, chan);
+    wakeup_channel.reset(new channel(socketPair[1], EVENT_READ, handleWakeup, NULL, this));
+    this->add_channel_event(wakeup_channel->fd, wakeup_channel.get());
 }
 
 /**
@@ -230,7 +200,6 @@ event_loop::event_loop(const std::string &thread_name)
  */
 int event_loop::run() 
 {
-    struct event_dispatcher *dispatcher = eventDispatcher.get();
     if (this->owner_thread_id != pthread_self()) {
         exit(1);
     }
@@ -241,7 +210,7 @@ int event_loop::run()
 
     while (!this->quit) {
         //block here to wait I/O event, and get active channels
-        dispatcher->dispatch(this, &timeval);
+        eventDispatcher->dispatch(this, &timeval);
 
         //handle the pending channel
         handle_pending_channel();

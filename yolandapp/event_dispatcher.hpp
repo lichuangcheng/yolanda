@@ -34,9 +34,6 @@ public:
     void clear();
 
 private:
-    int event_count;
-    int nfds;
-    int realloc_copy;
     int efd;
     std::vector<epoll_event> events;
 };
