@@ -56,6 +56,7 @@ enum http_request_state http_request::current_state() const
 //根据request请求判断是否需要关闭服务器-->客户端单向连接
 int http_request::close_connection() const
 {
+    return 1;
     auto connection = get_header("Connection");
 
     if (connection != nullptr && CLOSE.compare(connection) == 0)

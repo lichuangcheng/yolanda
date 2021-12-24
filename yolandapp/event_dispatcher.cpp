@@ -29,24 +29,10 @@ int event_dispatcher::add(struct channel *channel1) {
 int event_dispatcher::del(struct channel *channel1) 
 {
     int fd = channel1->fd;
-
-    int events = 0;
-    if (channel1->events & EVENT_READ) {
-        events = events | EPOLLIN;
-    }
-
-    if (channel1->events & EVENT_WRITE) {
-        events = events | EPOLLOUT;
-    }
-
-    struct epoll_event event;
-    event.data.fd = fd;
-    event.events = events;
-//    event.events = events | EPOLLET;
-    if (epoll_ctl(efd, EPOLL_CTL_DEL, fd, &event) == -1) {
+    if (epoll_ctl(efd, EPOLL_CTL_DEL, fd, nullptr) == -1) {
         error(1, errno, "epoll_ctl delete fd failed");
+        return -1;
     }
-
     return 0;
 }
 
@@ -102,22 +88,17 @@ int event_dispatcher::dispatch(struct event_loop *eventLoop, struct timeval *tim
     return 0;
 }
 
-void event_dispatcher::clear() 
-{
-    events.clear();
-    close(efd);
-    // eventLoop->event_dispatcher_data = NULL;
-    return;
-}
-
-int event_dispatcher::init() 
+event_dispatcher::event_dispatcher() 
 {
     efd = epoll_create1(0);
     if (efd == -1) {
         error_die("epoll create failed");
-        return -1;
     }
 
-   events.resize(128);
-   return 0;
+    events.resize(128);
+}
+
+event_dispatcher::~event_dispatcher() 
+{
+    close(efd);
 }

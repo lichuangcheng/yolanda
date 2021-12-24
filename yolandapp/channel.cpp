@@ -4,7 +4,7 @@
 // namespace yolandapp {
 
 
-int channel::write_event_enable() 
+int channel::enable_write() 
 {
     event_loop *eventLoop = (event_loop *) this->data;
     this->events = this->events | EVENT_WRITE;
@@ -12,7 +12,7 @@ int channel::write_event_enable()
     return 0;
 }
 
-int channel::write_event_disable()
+int channel::disable_write()
 {
     event_loop *eventLoop = (event_loop *) this->data;
     this->events = this->events & ~EVENT_WRITE;

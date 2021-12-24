@@ -88,10 +88,10 @@ int event_loop::handle_pending_remove(int fd, struct channel *channel1) {
     if (fd < 0)
         return 0;
 
-    if (!map.contains(fd))
-        return (-1);
-
-    struct channel *channel2 = map[fd];
+    auto it = map.find(fd);
+    if (it == map.end()) return -1;
+    
+    struct channel *channel2 = it->second;
 
     //update dispatcher(multi-thread)here
     int retval = 0;
@@ -170,6 +170,8 @@ event_loop::event_loop()
 
 event_loop::~event_loop()
 {
+    close(socketPair[0]);
+    close(socketPair[1]);
 }
 
 event_loop::event_loop(const std::string &thread_name) 
@@ -179,7 +181,6 @@ event_loop::event_loop(const std::string &thread_name)
 
     yolanda_msgx("set epoll as dispatcher, %s", this->thread_name.c_str());
     eventDispatcher = std::make_shared<event_dispatcher>();
-    eventDispatcher->init();
 
     //add the socketfd to event
     owner_thread_id = pthread_self();
@@ -218,6 +219,13 @@ int event_loop::run()
 
     yolanda_msgx("event loop end, %s", this->thread_name);
     return 0;
+}
+
+void event_loop::stop() 
+{
+    quit = 1;
+    if (!isInSameThread(this));
+        wakeup();
 }
 
 

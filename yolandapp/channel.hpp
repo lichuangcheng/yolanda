@@ -15,7 +15,6 @@
 
 // namespace yolandapp {
 
-
 class channel 
 {
 public:
@@ -26,42 +25,54 @@ public:
         SIGNAL  = 0x08
     };
 
-    using event_read_callback = std::function<int (void *data)>;
-    using event_write_callback = std::function<int (void *data)>;
+    using read_callback = std::function<int (void *data)>;
+    using write_callback = std::function<int (void *data)>;
+    using error_callback = std::function<void (void *data, const char *err_msg)>;
 
     int fd;
     int events;   //表示event类型
 
-    event_read_callback eventReadCallback;
-    event_write_callback eventWriteCallback;
+    read_callback eventReadCallback;
+    write_callback eventWriteCallback;
+    error_callback error_fn;
     void *data; //callback data, 可能是event_loop，也可能是tcp_server或者tcp_connection
     
-    channel(int fd, int events, event_read_callback read_cb, event_write_callback write_cb, void *data) {
-        this->fd = fd;
-        this->events = events;
-        this->eventReadCallback = read_cb;
-        this->eventWriteCallback = write_cb;
-        this->data = data;
+    channel(int fd, int events) 
+        : fd(fd)
+        , events(events)
+    {
     }
 
-    int write_event_is_enabled() const {
+    channel(int fd, int events, read_callback read_cb, write_callback write_cb, void *data) 
+        : fd(fd)
+        , events(events)
+        , eventReadCallback(read_cb)
+        , eventWriteCallback(write_cb)
+        , data(data)
+    {
+    }
+
+    channel* read(read_callback read_fn) {
+        eventReadCallback = std::move(read_fn);
+        return this;
+    }
+    channel* write(write_callback write_fn) {
+        eventWriteCallback = std::move(write_fn);
+        return this;
+    }
+    channel* error(error_callback err_fn) {
+        error_fn = std::move(err_fn);
+        return this;
+    }
+
+    int is_enabled_write() const {
         return events & EVENT_WRITE;
     }
-
-    int write_event_enable();
-    
-    int write_event_disable();
+    int enable_write();
+    int disable_write();
 };
 
 using channel_map = std::map<int, channel *>;
-
-
-int channel_write_event_is_enabled(struct channel *channel);
-
-int channel_write_event_enable(struct channel *channel);
-
-int channel_write_event_disable(struct channel *channel);
-
 
 // } // namespace yolandapp
 

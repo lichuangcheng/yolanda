@@ -6,7 +6,7 @@
 
 //连接建立之后的callback
 int http_onConnectionCompleted(struct tcp_connection *tcpConnection) {
-    yolanda_msgx("connection completed");
+    yolanda_msgx("http connection completed, fd = %d", tcpConnection->chan->fd);
     tcpConnection->request = new http_request();
     return 0;
 }
@@ -119,7 +119,7 @@ int http_onWriteCompleted(struct tcp_connection *tcpConnection) {
 
 //连接关闭之后的callback
 int http_onConnectionClosed(struct tcp_connection *tcpConnection) {
-    yolanda_msgx("connection closed");
+    yolanda_msgx("http connection closed: fd = %d", tcpConnection->chan->fd);
     if (tcpConnection->request) {
         delete (http_request *)tcpConnection->request;
         tcpConnection->request = nullptr;

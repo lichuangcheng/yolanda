@@ -15,8 +15,8 @@ public:
     /**  对应实现 */
     std::string name;
 
-    /**  初始化函数 */
-    int init();
+    event_dispatcher();
+    ~event_dispatcher();
 
     /** 通知dispatcher新增一个channel事件*/
     int add(channel * channel);
@@ -29,9 +29,6 @@ public:
 
     /** 实现事件分发，然后调用event_loop的event_activate方法执行callback*/
     int dispatch(struct event_loop *eventLoop, struct timeval *);
-
-    /** 清除数据 */
-    void clear();
 
 private:
     int efd;

@@ -23,6 +23,8 @@ int handle_connection_closed(tcp_connection *tcpConnection) {
     if (tcpConnection->connectionClosedCallBack != NULL) {
         tcpConnection->connectionClosedCallBack(tcpConnection);
     }
+
+    delete tcpConnection;
     return 0;
 }
 
@@ -59,7 +61,7 @@ int handle_write(void *data) {
         output_buffer->readIndex += nwrited;
         //如果数据完全发送出去，就不需要继续了
         if (output_buffer->readable() == 0) {
-            channel->write_event_disable();
+            channel->disable_write();
         }
         //回调writeCompletedCallBack
         if (tcpConnection->writeCompletedCallBack != NULL) {
@@ -97,6 +99,11 @@ tcp_connection::tcp_connection(int connected_fd, struct event_loop *eventLoop,
     eventLoop->add_channel_event(connected_fd, chan.get());
 }
 
+tcp_connection::~tcp_connection()
+{
+    close(chan->fd);
+}
+
 //应用层调用入口
 int tcp_connection::send_data(void *data, size_t size) {
     ssize_t nwrited = 0;
@@ -104,7 +111,7 @@ int tcp_connection::send_data(void *data, size_t size) {
     int fault = 0;
 
     //先往套接字尝试发送数据
-    if (!chan->write_event_is_enabled() && output_buffer.readable() == 0) {
+    if (!chan->is_enabled_write() && output_buffer.readable() == 0) {
         nwrited = write(chan->fd, data, size);
         if (nwrited >= 0) {
             nleft = nleft - nwrited;
@@ -121,8 +128,8 @@ int tcp_connection::send_data(void *data, size_t size) {
     if (!fault && nleft > 0) {
         //拷贝到Buffer中，Buffer的数据由框架接管
         output_buffer.append(data + nwrited, nleft);
-        if (!chan->write_event_is_enabled()) {
-            chan->write_event_enable();
+        if (!chan->is_enabled_write()) {
+            chan->enable_write();
         }
     }
 

@@ -12,8 +12,8 @@ char rot13_char(char c) {
 }
 
 //连接建立之后的callback
-int onConnectionCompleted(struct tcp_connection *tcpConnection) {
-    printf("connection completed\n");
+int onConnectionCompleted(struct tcp_connection *conn) {
+    printf("connection completed: fd = %d\n", conn->chan->fd);
     return 0;
 }
 
@@ -39,7 +39,7 @@ int onWriteCompleted(struct tcp_connection *tcpConnection) {
 
 //连接关闭之后的callback
 int onConnectionClosed(struct tcp_connection *tcpConnection) {
-    printf("connection closed\n");
+    printf("connection closed. fd = %d\n", tcpConnection->chan->fd);
     return 0;
 }
 

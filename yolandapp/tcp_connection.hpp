@@ -36,6 +36,7 @@ struct tcp_connection {
                    connection_closed_call_back connectionClosedCallBack,
                    message_call_back messageCallBack, write_completed_call_back writeCompletedCallBack);
 
+    ~tcp_connection();
     int send_data(void *data, size_t size);
     int send_buffer(buffer *buffer);
     void shutdown();

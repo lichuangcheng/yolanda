@@ -21,20 +21,21 @@ void *event_loop_thread_run(void *arg) {
 
 //初始化已经分配内存的event_loop_thread
 event_loop_thread::event_loop_thread(int i) 
+    : thread_name("Thread " + std::to_string(i))
 {
-    thread_count = 0;
-    thread_tid = 0;
-    char buf[64];
-    sprintf(buf, "Thread-%d", i + 1);
-    thread_name = buf;
 }
 
+event_loop_thread::~event_loop_thread()
+{
+    eventLoop->stop();
+    if (loop_thread.joinable())
+        loop_thread.join();
+}
 
 //由主线程调用，初始化一个子线程，并且让子线程开始运行event_loop
 struct event_loop *event_loop_thread::start()
 {
-    pthread_create(&this->thread_tid, NULL, &event_loop_thread_run, this);
-
+    loop_thread = std::thread(event_loop_thread_run, this);
     {
         std::unique_lock<std::mutex> lock(mutex);
         cond.wait(lock, [this]{

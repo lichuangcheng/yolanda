@@ -36,6 +36,7 @@ struct event_loop {
     event_loop(const std::string &thread_name);
 
     int run();
+    void stop();
 
     // 唤醒
     void wakeup();
@@ -47,23 +48,21 @@ struct event_loop {
 
     int update_channel_event(int fd, struct channel *channel1);
 
-    int handle_pending_add(int fd, struct channel *channel);
-
-    int handle_pending_remove(int fd, struct channel *channel);
-
-    int handle_pending_update(int fd, struct channel *channel);
-
-
     // dispather派发完事件之后，调用该方法通知event_loop执行对应事件的相关callback方法
     // res: EVENT_READ | EVENT_READ等
     int channel_event_activate(int fd, int res);
 
     ~event_loop();
+protected:
+    int handle_pending_add(int fd, struct channel *channel);
 
+    int handle_pending_remove(int fd, struct channel *channel);
+
+    int handle_pending_update(int fd, struct channel *channel);
 private:
     int handle_pending_channel();
+
     int do_channel_event(int fd, struct channel *channel1, int type);
-    void channel_buffer_nolock(int fd, struct channel *channel1, int type);
 };
 
 void assertInSameThread(struct event_loop *eventLoop);
